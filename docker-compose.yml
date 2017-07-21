@@ -1,0 +1,40 @@
+version: '2'
+services:
+    workspace:
+        build:
+            context: ./workspace
+        volumes_from:
+            - volumes_source
+        tty: true
+        networks:
+            vpcbr:
+              ipv4_address: 10.5.0.5
+
+    volumes_source:
+        build: ./volumes
+        volumes:
+            - ./workspace/apps:/var/www/app
+        networks:
+            vpcbr:
+              ipv4_address: 10.5.0.6
+    nginx:
+        build:
+            context: ./nginx
+        volumes_from:
+            - volumes_source
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
+        ports:
+            - "443:443"
+        links:
+            - workspace
+        networks:
+            vpcbr:
+              ipv4_address: 10.5.0.7
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/16
+         gateway: 10.5.0.1
